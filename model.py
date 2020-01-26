@@ -14,7 +14,8 @@ class cyclegan(object):
     def __init__(self, sess, args):
         self.sess = sess
         self.batch_size = args.batch_size
-        self.image_size = args.fine_size
+        self.image_h_size = args.fine_size
+        self.image_w_size = args.fine_size
         self.input_c_dim = args.input_nc
         self.output_c_dim = args.output_nc
         self.L1_lambda = args.L1_lambda
@@ -42,7 +43,7 @@ class cyclegan(object):
 
     def _build_model(self):
         self.real_data = tf.placeholder(tf.float32,
-                                        [None, self.image_size, self.image_size,
+                                        [None, self.image_h_size, self.image_w_size,
                                          self.input_c_dim + self.output_c_dim],
                                         name='real_A_and_B_images')
 
@@ -68,10 +69,10 @@ class cyclegan(object):
             + self.L1_lambda * abs_criterion(self.real_B, self.fake_B_)
 
         self.fake_A_sample = tf.placeholder(tf.float32,
-                                            [None, self.image_size, self.image_size,
+                                            [None, self.image_h_size, self.image_w_size,
                                              self.input_c_dim], name='fake_A_sample')
         self.fake_B_sample = tf.placeholder(tf.float32,
-                                            [None, self.image_size, self.image_size,
+                                            [None, self.image_h_size, self.image_w_size,
                                              self.output_c_dim], name='fake_B_sample')
         self.DB_real = self.discriminator(self.real_B, self.options, reuse=True, name="discriminatorB")
         self.DA_real = self.discriminator(self.real_A, self.options, reuse=True, name="discriminatorA")
@@ -104,10 +105,10 @@ class cyclegan(object):
         )
 
         self.test_A = tf.placeholder(tf.float32,
-                                     [None, self.image_size, self.image_size,
+                                     [None, self.image_h_size, self.image_w_size,
                                       self.input_c_dim], name='test_A')
         self.test_B = tf.placeholder(tf.float32,
-                                     [None, self.image_size, self.image_size,
+                                     [None, self.image_h_size, self.image_w_size,
                                       self.output_c_dim], name='test_B')
         self.testB = self.generator(self.test_A, self.options, True, name="generatorA2B")
         self.testA = self.generator(self.test_B, self.options, True, name="generatorB2A")
@@ -172,15 +173,15 @@ class cyclegan(object):
                 print(("Epoch: [%2d] [%4d/%4d] time: %4.4f" % (
                     epoch, idx, batch_idxs, time.time() - start_time)))
 
-                if np.mod(counter, args.print_freq) == 1:
-                    self.sample_model(args.sample_dir, epoch, idx)
+                # if np.mod(counter, args.print_freq) == 1:
+                #     self.sample_model(args.sample_dir, epoch, idx)
 
                 if np.mod(counter, args.save_freq) == 2:
                     self.save(args.checkpoint_dir, counter)
 
     def save(self, checkpoint_dir, step):
         model_name = "cyclegan.model"
-        model_dir = "%s_%s" % (self.dataset_dir, self.image_size)
+        model_dir = "%s_%s_%s" % (self.dataset_dir, self.image_h_size, self.image_w_size)
         checkpoint_dir = os.path.join(checkpoint_dir, model_dir)
 
         if not os.path.exists(checkpoint_dir):
@@ -193,7 +194,7 @@ class cyclegan(object):
     def load(self, checkpoint_dir):
         print(" [*] Reading checkpoint...")
 
-        model_dir = "%s_%s" % (self.dataset_dir, self.image_size)
+        model_dir = "%s_%s_%s" % (self.dataset_dir, self.image_h_size, self.image_w_size)
         checkpoint_dir = os.path.join(checkpoint_dir, model_dir)
 
         ckpt = tf.train.get_checkpoint_state(checkpoint_dir)

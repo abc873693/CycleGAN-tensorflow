@@ -5,3 +5,5 @@ checkpoint/*
 datasets/*
 test/*
 sample/*
+.vscode
+venv
